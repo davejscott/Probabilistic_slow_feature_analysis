@@ -23,18 +23,18 @@ normalized = 0
 #series = read_csv('P14train.csv', header=0, index_col=0)
 #X = series.values
 def stationarity_test(timeseries):
-    #columns = list(timeseries)
-    #for ite in columns:
-        result = adfuller(df['Intake Temperature'])
+    columns = list(timeseries)
+    for ite in columns:
+        result = adfuller(df[ite])
         print('ADF Statistic: %f' % result[0])
         print('p-value: %f' % result[1])
         print('Critical Values:')
         for key, value in result[4].items():
             print('\t%s: %.3f' % (key, value))
-            if result[0] < 0.05:
-                print('this data is stationary')
-            else:
-                print('this data is non-stationary')
+        if result[0] < 0.05:
+            print('this data is stationary')
+        else:
+            print('this data is non-stationary')
 
 stationarity_test(df)
         
