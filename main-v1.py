@@ -10,9 +10,12 @@ from statsmodels.tsa.stattools import adfuller, kpss
 
 df=pd.read_csv('5P14Clean.csv', sep=',')
 df=df.dropna()
-df.values
 df.plot()
 pyplot.show()
+
+
+#series = read_csv('P14train.csv', header=0, index_col=0)
+#X = series.values
 
 ### set variables for ADF test
 
@@ -20,40 +23,95 @@ alpha = 0.05
 lags = 1
 normalized = 0
 
-#series = read_csv('P14train.csv', header=0, index_col=0)
-#X = series.values
-def stationarity_test(timeseries):
-    columns = list(timeseries)
-    for ite in columns:
-        result = adfuller(df[ite])
-        print('ADF Statistic: %f' % result[0])
-        print('p-value: %f' % result[1])
-        print('Critical Values:')
-        for key, value in result[4].items():
-            print('\t%s: %.3f' % (key, value))
-        if result[0] < 0.05:
-            print('this data is stationary')
-        else:
-            print('this data is non-stationary')
+def check_for_stationarity(X, cutoff=0.01):
+    # H_0 in adfuller is unit root exists (non-stationary)
+    # We must observe significant p-value to convince ourselves that the series is stationary
+    pvalue = adfuller(X)[1]
+    if pvalue < cutoff:
+        print("p-value = " + str(pvalue) + ' The series is likely stationary.')
+        return True
+    else:
+        print('p-value = ' + str(pvalue) + ' The series is likely non-stationary.')
+        return False 
+
+
+def stationarity_test(df):
+    columns = []
+    for c in df.columns[1:]:
+        #if (not df[c].isnull().all()) and df[c].var() !=0:
+        #    columns.append(c)
+        df = df[columns]
+        print(df[c])
+        z = adfuller(df.c)
+        print('ADF Statistic: %f' % z)
+        if len(columns) == 0: return []
+        for i, col in enumerate(df.columns):
+            serie = df[col].dropna()
+            result = adfuller(serie)
+            print('ADF Statistic: %f' % result[0])
+            print('p-value: %f' % result[1])
+            print('Critical Values:')
+            for key, value in result[4].items():
+                print('\t%s: %.3f' % (key, value))
+                if result[0] < 0.05:
+                    print('this data is stationary')
+                else:
+                    print('this data is non-stationary')
+            
+
+            #for reg in p_values:
+             #   v = adfuller(serie, regression=reg)[1]
+             #   if math.isnan(v): #uncertain
+             #       p_values[reg].append(-0.1)
+              #  else:
+              #      p_values[reg].append(v)
+         #columns = list(timeseries)
+         #  result = adfuller(print(columns[ite]))
+       
+      #print('ADF Statistic: %f' % result[0])
+      #  print('p-value: %f' % result[1])
+       #print('Critical Values:')
+        #for key, value in result[4].items():
+         #   print('\t%s: %.3f' % (key, value))
+        #if result[0] < 0.05:
+        #    print('this data is stationary')
+        #else:
+        #    print('this data is non-stationary')
 
 stationarity_test(df)
         
+def do_adfuller(path, srv, p_values):
+    filename = os.path.join(path, srv["filename"])
+    df = load_timeseries(filename, srv)
+    columns = []
+    for c in df.columns:
+        if (not df[c].isnull().all()) and df[c].var() != 0:
+            columns.append(c)
+    df = df[columns]
+    if len(columns) == 0: return []
+    for i, col in enumerate(df.columns):
+        serie = df[col].dropna()
+        if is_monotonic(serie):
+            serie = serie.diff()[1:]
 
-cols_to_transform = ['Price','Km_From_CBD','Local_Median_Price', 'AreaSize']
+        for reg in p_values:
+            v = adfuller(serie, regression=reg)[1]
+            if math.isnan(v): # uncertain
+                p_values[reg].append(-0.1)
+            else:
+                p_values[reg].append(v)
 
-for x in cols_to_transform:
-    df[x]
-
-    newcolname = ('T1_Pre_'+ x)
-    df.newcolname = df[x] + 1 
+    return p_values 
+    
+#for column in df.columns[::-1]:
+ #   print(df[column])
     
 
+#data = df
 
-data = df
-
-def DSFA(data, qs, d):
-    m = data.shape
-    Z = m * d
+#def DSFA(data, qs, d):
+#    m = data.shape
+#    Z = m * d
     #for ite in range(d-1):
     #    df = df([[data[ite:([-1] - d + ite), :]]
     
