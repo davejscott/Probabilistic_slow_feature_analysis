@@ -30,6 +30,24 @@ def adf_test(timeseries):
             #return False
     print (dfoutput)
 
+def slow_feature_analysis(A, B, d):
+    #A: temporal structure matrix
+    #B: covariance matrix
+    [u1, s1, v1] = np.linalg.svd(B, int)
+    v = np.sqrt(v1)
+    x,resid,rank,s = np.linalg.lstsq(v,u1.T)
+    A1 = x * (A * u1/v)
+    W, D, E = np.linalg.svd(A1)
+    Lambda = []
+    print(E.shape)
+    for i in range(d):
+        q = E.copy()
+        Lambda.append(q[i,i])
+    print(Lambda)
+    return Lambda
+   # W = np.linalg.lstsq(u1,v) * W
+    
+    
         
     
 #adf_test(train['Frequency'])
@@ -51,9 +69,11 @@ def dynamic_slow_feature_analysis(stat_timeseries, q, d):
      errorX = X[:,:-1] - X[:,1:]
      A = np.dot(errorX, errorX.T) / (l - 1)
      B = np.dot(X, X.T) / l
+     slow_feature_analysis(A,B, d)
      ### Slow feature analysis time!
 
-dynamic_slow_feature_analysis(train['Frequency'], 1, 10)    
+
+dynamic_slow_feature_analysis(train['Motor Temperature'], 5, 1)    
     
 
   
