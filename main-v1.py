@@ -64,7 +64,6 @@ def dynamic_slow_feature_analysis(stat_timeseries, q, d, m):
      for ite in range(d):
          y = Z.copy()
          X.append(y[ite:-1+ite-d])
-     #print(X)
      X = np.array(X)
      ones = np.ones((X.shape), int)
      errorX = X[:,:-1] - X[:,1:]
@@ -75,17 +74,23 @@ def dynamic_slow_feature_analysis(stat_timeseries, q, d, m):
      B = np.dot(X, X.T) / l
      Lambda, W = slow_feature_analysis(A,B, d)
      ### Slow feature analysis time!
+     ## Still some issues with SFA
      Feature = X * W
      R = np.linalg.inv(W).T
-     C = R[-1-m+1: -1,:-1-q + 1:-1]
+     C = R[-1 -m +1: -1,:-1-q + 1:-1]
      Lambdafeat = []
-     for ite in range(q):
-         E = Lambda.copy()
-         Lambdafeat.append(E[-1-q+ite])
+     Lambda = np.array(Lambda)
+     t = Lambda.shape
+     # FIX THIS SECTION FOR ISSUES WITH
+     # The iterative portion of Lambda
+     #for ite in range(d):
+     #    E = Lambda.copy()
+     #    Lambdafeat.append(E[:-1-d+ite])
+     print(Lambdafeat)
      Reconstruction = Feature[:,-1-q+1:-1] * R[:,-1-q+1:-1].T
      ReconstructionError = X[:,:m] - Reconstruction[:,:m]
      Sigma = np.var(ReconstructionError)
-     Lam = 1 - Lambdafeat / 2
+     Lam = 1 - Lambda / 2
      Lambda = []
      p = 0.01
      for n in Lam:
@@ -95,6 +100,9 @@ def dynamic_slow_feature_analysis(stat_timeseries, q, d, m):
              Lambda.append(p)
      #    Lambda.append(max(1 - Lambdafeat(ite)/2)
      print(Lambda) 
+     print(Sigma)
+     print(R)
+     print(C)
      return Sigma, Lambda, C
         # if Lambda < 0
          #    Lambda = 0.01
