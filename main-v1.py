@@ -39,23 +39,27 @@ def slow_feature_analysis(A, B, d):
     A1 = x * (A * u1/v)
     W, D, E = np.linalg.svd(A1)
     Lambda = []
-    print(E.shape)
+    #print(E.shape)
     for i in range(d):
         q = E.copy()
         Lambda.append(q[i,i])
-    print(Lambda)
-    return Lambda
+    #print(Lambda)
+    return Lambda, W
    # W = np.linalg.lstsq(u1,v) * W
     
+   #ERRORS:
+   # Double check why the Lambda value being extracted it one
+   # Make the W area!
     
         
     
 #adf_test(train['Frequency'])
 # q, number of features
 # d, number of delays
-def dynamic_slow_feature_analysis(stat_timeseries, q, d):
+def dynamic_slow_feature_analysis(stat_timeseries, q, d, m):
      Z = np.array(stat_timeseries)
      l = np.array(Z.shape)
+     print(l)
      X = []
      for ite in range(d):
          y = Z.copy()
@@ -69,11 +73,33 @@ def dynamic_slow_feature_analysis(stat_timeseries, q, d):
      errorX = X[:,:-1] - X[:,1:]
      A = np.dot(errorX, errorX.T) / (l - 1)
      B = np.dot(X, X.T) / l
-     slow_feature_analysis(A,B, d)
+     Lambda, W = slow_feature_analysis(A,B, d)
      ### Slow feature analysis time!
+     Feature = X * W
+     R = np.linalg.inv(W).T
+     C = R[-1-m+1: -1,:-1-q + 1:-1]
+     Lambdafeat = []
+     for ite in range(q):
+         E = Lambda.copy()
+         Lambdafeat.append(E[-1-q+ite])
+     Reconstruction = Feature[:,-1-q+1:-1] * R[:,-1-q+1:-1].T
+     ReconstructionError = X[:,:m] - Reconstruction[:,:m]
+     Sigma = np.var(ReconstructionError)
+     Lam = 1 - Lambdafeat / 2
+     Lambda = []
+     p = 0.01
+     for n in Lam:
+         if n > 0.01:
+             Lambda.append(n)
+         else:
+             Lambda.append(p)
+     #    Lambda.append(max(1 - Lambdafeat(ite)/2)
+     print(Lambda) 
+     return Sigma, Lambda, C
+        # if Lambda < 0
+         #    Lambda = 0.01
+        
+     
 
 
-dynamic_slow_feature_analysis(train['Motor Temperature'], 5, 1)    
-    
-
-  
+dynamic_slow_feature_analysis(train['Motor Temperature'], 5, 1, 1)    
